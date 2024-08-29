@@ -1,7 +1,10 @@
 import subprocess
 import argparse
 import csv
+import random
 from datetime import date
+from time import sleep
+from tqdm import tqdm
 
 def write_file(fname, tmp):
     with open(fname, "w") as file:
@@ -16,7 +19,12 @@ def write_file(fname, tmp):
 
 class Task:
     # Swap task order
+    def make_top(self, id):
+        self.swap_order(id, 0)
+
     def swap_order(self, id, to):
+        id -= 1
+        to -= 1
         tmp = []
         with open("taskfile0.csv", "r") as file:
             reader = csv.DictReader(file)
@@ -65,6 +73,9 @@ class Task:
         _ = subprocess.run("clear")
 
     def display(self):
+        self.clear_screen()
+        for i in tqdm(range(10)):
+            sleep(random.choice([0.1, 0.2, 0.4]))
         self.clear_screen()
         id = 1
         with open("taskfile0.csv") as file:
