@@ -2,14 +2,39 @@ import subprocess
 import argparse
 import csv
 from datetime import date
-import pandas
+
+def write_file(fname, tmp):
+    with open(fname, "w") as file:
+        writer = csv.DictWriter(file, fieldnames=["name", "start", "end", "status"])
+        writer.writeheader()
+        for row in tmp:
+            nm = row["name"]
+            st = row["start"]
+            ed = row["end"]
+            ss = row["status"]
+            writer.writerow({"name": nm, "start": st, "end": ed, "status": ss})
 
 class Task:
+    # Swap task order
+    def swap_order(self, id, to):
+        tmp = []
+        with open("taskfile0.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                nm = row["name"]
+                st = row["start"]
+                ed = row["end"]
+                ss = row["status"]
+                tmp.append({"name": nm, "start": st, "end": ed, "status": ss})
+        tmp[id], tmp[to] = tmp[to], tmp[id]
+        write_file("taskfile0.csv", tmp)
+        self.display()
+
     # Delete Task
     def del_task(self, id):
         tmp = []
         with open("taskfile0.csv", "r") as file, open("archived.csv", "a") as out:
-            cnt = 0
+            cnt = 1
             reader = csv.DictReader(file)
             writer = csv.DictWriter(out, fieldnames=["name", "start", "end", "status"])
             for row in reader:
@@ -22,15 +47,7 @@ class Task:
                 else:
                     tmp.append({"name": nm, "start": st, "end": ed, "status": ss})
                 cnt += 1
-        with open("taskfile0.csv", "w") as file:
-            writer = csv.DictWriter(file, fieldnames=["name", "start", "end", "status"])
-            writer.writeheader()
-            for row in tmp:
-                nm = row["name"]
-                st = row["start"]
-                ed = row["end"]
-                ss = row["status"]
-                writer.writerow({"name": nm, "start": st, "end": ed, "status": ss})
+        write_file("taskfile0.csv", tmp)
 
     # Add Task
     def add_task(self, name, end):
@@ -95,9 +112,14 @@ def main():
     # name = input("Name? ")
     # deadline = input("deadline? ")
     # task.add_task(name, deadline)
+
     task.display()
-    id = int(input("Which task to delete: "))
-    task.del_task(id)
+    # id = int(input("Which task to delete: "))
+    # task.del_task(id)
+
+    id = int(input("from? "))
+    to = int(input("to? "))
+    task.swap_order(id, to)
 
 
 if __name__ == "__main__":
