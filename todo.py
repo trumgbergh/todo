@@ -73,10 +73,7 @@ class Task:
         _ = subprocess.run("clear")
 
     def display(self):
-        self.clear_screen()
-        for i in tqdm(range(10)):
-            sleep(random.choice([0.1, 0.2, 0.4]))
-        self.clear_screen()
+        self.bar()
         id = 1
         with open("taskfile0.csv") as file:
             reader = csv.DictReader(file)
@@ -88,6 +85,12 @@ class Task:
                     )
                 )
                 id += 1
+    def bar(self):
+        self.clear_screen()
+        for i in tqdm(range(10)):
+            sleep(random.choice([0.1, 0.2, 0.4]))
+        self.clear_screen()
+
 
     def format(self, id, quest, start, end, status):
         tmp = [
