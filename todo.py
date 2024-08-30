@@ -2,40 +2,34 @@ import subprocess
 import argparse
 import csv
 import random
+from typing import Optional
+from typing import Sequence
 from datetime import date
 from time import sleep
 from tqdm import tqdm
 
-def write_file(fname, tmp):
+def write_file(fname, rows):
     with open(fname, "w") as file:
         writer = csv.DictWriter(file, fieldnames=["name", "start", "end", "status"])
         writer.writeheader()
-        for row in tmp:
-            nm = row["name"]
-            st = row["start"]
-            ed = row["end"]
-            ss = row["status"]
-            writer.writerow({"name": nm, "start": st, "end": ed, "status": ss})
+        writer.writerow(rows)
 
-class Task:
+class TaskManager:
     # Swap task order
     def make_top(self, id):
-        self.swap_order(id, 0)
+        self.swap_order(id, 1)
 
     def swap_order(self, id, to):
         id -= 1
         to -= 1
-        tmp = []
+        rows = []
         with open("taskfile0.csv", "r") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                nm = row["name"]
-                st = row["start"]
-                ed = row["end"]
-                ss = row["status"]
-                tmp.append({"name": nm, "start": st, "end": ed, "status": ss})
-        tmp[id], tmp[to] = tmp[to], tmp[id]
-        write_file("taskfile0.csv", tmp)
+                rows.append(row)
+        rows[id], rows[to] = rows[to], rows[id]
+
+        write_file("taskfile0.csv", rows)
         self.display()
 
     # Delete Task
@@ -46,14 +40,10 @@ class Task:
             reader = csv.DictReader(file)
             writer = csv.DictWriter(out, fieldnames=["name", "start", "end", "status"])
             for row in reader:
-                nm = row["name"]
-                st = row["start"]
-                ed = row["end"]
-                ss = row["status"]
                 if cnt == id:
-                    writer.writerow({"name": nm, "start": st, "end": ed, "status": ss})
+                    writer.writerow(row)
                 else:
-                    tmp.append({"name": nm, "start": st, "end": ed, "status": ss})
+                    tmp.append(row)
                 cnt += 1
         write_file("taskfile0.csv", tmp)
 
@@ -121,20 +111,22 @@ class Task:
         return f"{i}"
 
 
-def main():
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    parser = argparse.ArgumentParser()
     task = Task()
     # name = input("Name? ")
     # deadline = input("deadline? ")
     # task.add_task(name, deadline)
 
-    task.display()
     # id = int(input("Which task to delete: "))
     # task.del_task(id)
 
-    id = int(input("from? "))
-    to = int(input("to? "))
-    task.swap_order(id, to)
+    # id = int(input("from? "))
+    # to = int(input("to? "))
+    # task.swap_order(id, to)
+    args = parser.parse_args(argv)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    exit(main())
