@@ -12,9 +12,17 @@ def write_file(fname, rows):
     with open(fname, "w") as file:
         writer = csv.DictWriter(file, fieldnames=["name", "start", "end", "status"])
         writer.writeheader()
-        writer.writerow(rows)
+        writer.writerows(rows)
 
 class TaskManager:
+    def nrow(self):
+        cnt = 0
+        with open("taskfile0.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                cnt += 1
+        return cnt
+
     # Swap task order
     def make_top(self, id):
         self.swap_order(id, 1)
@@ -34,6 +42,8 @@ class TaskManager:
 
     # Delete Task
     def del_task(self, id):
+        if not (1 <= id <= self.nrow()):
+            raise IndexError("Index is out of bound, so bad omegalul")
         tmp = []
         with open("taskfile0.csv", "r") as file, open("archived.csv", "a") as out:
             cnt = 1
@@ -46,6 +56,7 @@ class TaskManager:
                     tmp.append(row)
                 cnt += 1
         write_file("taskfile0.csv", tmp)
+        self.display()
 
     # Add Task
     def add_task(self, name, end):
@@ -112,19 +123,37 @@ class TaskManager:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    task = TaskManager()
+    task.display()
+
     parser = argparse.ArgumentParser()
-    task = Task()
-    # name = input("Name? ")
-    # deadline = input("deadline? ")
-    # task.add_task(name, deadline)
 
-    # id = int(input("Which task to delete: "))
-    # task.del_task(id)
+    parser.add_argument('-a', '--add', nargs=2, type=str, help = 'enter name and deadline to add task to the list')
 
-    # id = int(input("from? "))
-    # to = int(input("to? "))
-    # task.swap_order(id, to)
+    parser.add_argument('-s', '--swap', nargs=2, type=int, help = 'swap the order of two tasks')
+
+    parser.add_argument('--top', nargs=1, type=int, help = 'move task to top of the list')
+
+    parser.add_argument('-d', '--del', nargs='+', type=int, help = 'delete tasks from the list')
+
     args = parser.parse_args(argv)
+
+    d = vars(args)
+    if d['add'] != None:
+        name = d['add'][0]
+        deadline = d['add'][1]
+        task.add_task(name, deadline)
+    if d['swap'] != None:
+        first = d['swap'][0]
+        second = d['swap'][1]
+        task.swap_order(first, second)
+    if d['top'] != None:
+        id = d['top'][0]
+        task.make_top(id)
+    if d['del'] != None:
+        ls = sorted(d['del'], reverse=True)
+        for i in range(len(ls)):
+            task.del_task(ls[i])
     return 0
 
 
