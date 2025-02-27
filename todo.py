@@ -7,12 +7,15 @@ from typing import Sequence
 from datetime import date
 from time import sleep
 from tqdm import tqdm
+import sys
+
 
 def write_file(fname, rows):
     with open(fname, "w") as file:
         writer = csv.DictWriter(file, fieldnames=["name", "start", "end", "status"])
         writer.writeheader()
         writer.writerows(rows)
+
 
 class TaskManager:
     def nrow(self):
@@ -28,6 +31,12 @@ class TaskManager:
         self.swap_order(id, 1)
 
     def swap_order(self, id, to):
+        if not (1 <= id <= self.nrow()):
+            raise IndexError("Index is out of bound, so bad omegalul")
+
+        if not (1 <= to <= self.nrow()):
+            raise IndexError("Index is out of bound, so bad omegalul")
+
         id -= 1
         to -= 1
         rows = []
@@ -38,10 +47,9 @@ class TaskManager:
         rows[id], rows[to] = rows[to], rows[id]
 
         write_file("taskfile0.csv", rows)
-        self.display()
 
     # Delete Task
-    def del_task(self, id):
+    def erase_task(self, id):
         if not (1 <= id <= self.nrow()):
             raise IndexError("Index is out of bound, so bad omegalul")
         tmp = []
@@ -56,7 +64,6 @@ class TaskManager:
                     tmp.append(row)
                 cnt += 1
         write_file("taskfile0.csv", tmp)
-        self.display()
 
     # Add Task
     def add_task(self, name, end):
@@ -67,7 +74,6 @@ class TaskManager:
             writer.writerow(
                 {"name": name, "start": self.getdate(), "end": end, "status": "0%"}
             )
-        self.display()
 
     # printing
     def clear_screen(self):
@@ -86,12 +92,12 @@ class TaskManager:
                     )
                 )
                 id += 1
+
     def bar(self):
         self.clear_screen()
         for i in tqdm(range(10)):
-            sleep(random.choice([0.1, 0.2, 0.4]))
+            sleep(random.choice([0.1, 0.2]))
         self.clear_screen()
-
 
     def format(self, id, quest, start, end, status):
         tmp = [
@@ -121,41 +127,54 @@ class TaskManager:
             return f"0{i}"
         return f"{i}"
 
-
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    task = TaskManager()
-    task.display()
-
+    task_manager = TaskManager()
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-a', '--add', nargs=2, type=str, help = 'enter name and deadline to add task to the list')
+    parser.add_argument(
+        "-a",
+        "--add",
+        nargs=2,
+        type=str,
+        help="enter name and deadline to add task to the list",
+    )
 
-    parser.add_argument('-s', '--swap', nargs=2, type=int, help = 'swap the order of two tasks')
+    parser.add_argument(
+        "-s", "--swap", nargs=2, type=int, help="swap the order of two tasks"
+    )
 
-    parser.add_argument('--top', nargs=1, type=int, help = 'move task to top of the list')
+    parser.add_argument(
+        "-t", "--top", type=int, help="move task to top of the list"
+    )
 
-    parser.add_argument('-d', '--del', nargs='+', type=int, help = 'delete tasks from the list')
+    parser.add_argument(
+        "-e", "--erase", nargs="+", type=int, help="erase tasks from the list"
+    )
 
     args = parser.parse_args(argv)
 
-    d = vars(args)
-    if d['add'] != None:
-        name = d['add'][0]
-        deadline = d['add'][1]
-        task.add_task(name, deadline)
-    if d['swap'] != None:
-        first = d['swap'][0]
-        second = d['swap'][1]
-        task.swap_order(first, second)
-    if d['top'] != None:
-        id = d['top'][0]
-        task.make_top(id)
-    if d['del'] != None:
-        ls = sorted(d['del'], reverse=True)
+    if args.add != None:
+        name = args.add[0]
+        deadline = args.add[1]
+        task_manager.add_task(name, deadline)
+    if args.swap != None:
+        first = args.swap[0]
+        second = args.swap[1]
+        try:
+            task_manager.swap_order(first, second)
+        except IndexError as error:
+            print(error)
+            return 1
+    if args.top != None:
+        id = args.top
+        task_manager.make_top(id)
+    if args.erase != None:
+        ls = sorted(args.erase, reverse=True)
         for i in range(len(ls)):
-            task.del_task(ls[i])
+            task_manager.erase_task(ls[i])
+    task_manager.display()
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
